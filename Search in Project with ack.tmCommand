@@ -122,15 +122,23 @@ IO.popen('pbcopy -pboard find', 'w') { |copy| copy.print query }
 
 puts &lt;&lt;-HTML
   &lt;h2&gt;Searching for “#{ escape(query) }”&lt;/h2&gt;
-  &lt;table&gt;
 HTML
 
 ack_cmd=ENV['TM_ACK_COMMAND_PATH'] || 'ack'
-if ENV['TM_SELECTED_FILES']
-	command = %{#{ack_cmd} -H #{e_sh query} #{ENV['TM_SELECTED_FILES']}}
+selected_files=ENV['TM_SELECTED_FILES']
+
+if selected_files
+	command = %{#{ack_cmd} -H #{e_sh query} #{selected_files}}
+	puts &lt;&lt;-HTML
+	  &lt;p&gt;&lt;small&gt;Search limited to  “#{ escape(selected_files) }”&lt;/small&gt;&lt;/p&gt;
+HTML
 else
 	command = %{cd "#{directory}"; #{ack_cmd} #{e_sh query}}
 end
+
+puts &lt;&lt;-HTML
+  &lt;table&gt;
+HTML
 
 IO.popen(command) do |pipe|
 
