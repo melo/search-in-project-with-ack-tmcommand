@@ -15,6 +15,11 @@
 # Updated to use with ack by Pedro Melo &lt;melo@simplicidade.org&gt; 2008-05-26
 # Support for TM_SELECTED_FILES by Corey Jewett &lt;ml@syntheticplayground.com&gt; 2008-05-30
 #
+# **NOTE WELL**: TextMate does not inherit your PATH, so if you this
+# command does not find it define the environment variable
+# TM_ACK_COMMAND_PATH in your Preferences &gt; Advanced &gt; Shell Variables with
+# the full path of your copy of the ack command.
+#
 
 %w{ui web_preview escape}.each { |lib| require "%s/lib/%s" % [ENV['TM_SUPPORT_PATH'], lib] }
 
@@ -120,10 +125,11 @@ puts &lt;&lt;-HTML
   &lt;table&gt;
 HTML
 
+ack_cmd=ENV['TM_ACK_COMMAND_PATH'] || 'ack'
 if ENV['TM_SELECTED_FILES']
-	command = %{ack -H #{e_sh query} #{ENV['TM_SELECTED_FILES']}}
+	command = %{#{ack_cmd} -H #{e_sh query} #{ENV['TM_SELECTED_FILES']}}
 else
-	command = %{cd "#{directory}"; ack #{e_sh query}}
+	command = %{cd "#{directory}"; #{ack_cmd} #{e_sh query}}
 end
 
 IO.popen(command) do |pipe|
@@ -185,6 +191,9 @@ IO.popen(command) do |pipe|
   end
     
 end
+
+# TODO: see how to detect command not found in ruby and suggest using
+# TM_ACK_COMMAND_PATH to solve it
 
 puts &lt;&lt;-HTML
 &lt;/table&gt;
