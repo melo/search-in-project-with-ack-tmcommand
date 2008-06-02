@@ -13,6 +13,7 @@
 # Free to modify and redistribute with credit.
 #
 # Updated to use with ack by Pedro Melo &lt;melo@simplicidade.org&gt; 2008-05-26
+# Support for TM_SELECTED_FILES by Corey Jewett &lt;ml@syntheticplayground.com&gt; 2008-05-30
 #
 
 %w{ui web_preview escape}.each { |lib| require "%s/lib/%s" % [ENV['TM_SUPPORT_PATH'], lib] }
@@ -119,8 +120,11 @@ puts &lt;&lt;-HTML
   &lt;table&gt;
 HTML
 
-# TODO: Respect ENV['TM_SELECTED_FILES']
-command = %{cd "#{directory}"; ack #{e_sh query}}
+if ENV['TM_SELECTED_FILES']
+	command = %{ack -H #{e_sh query} #{ENV['TM_SELECTED_FILES']}}
+else
+	command = %{cd "#{directory}"; ack #{e_sh query}}
+end
 
 IO.popen(command) do |pipe|
 
@@ -133,6 +137,9 @@ IO.popen(command) do |pipe|
     line.gsub!(/^([^:]+):(\d+):(.*)$/) do
 
       relative_path, line_number, content = $1, $2, $3.strip
+	
+      relative_path.sub!(directory + "/", '') if ENV['TM_SELECTED_FILES']
+
       path = directory + '/' + relative_path
       url = "txmt://open/?url=file://#{path}&amp;line=#{line_number}"
       fname = "%s:%s" % [ellipsize_path(relative_path), line_number];
