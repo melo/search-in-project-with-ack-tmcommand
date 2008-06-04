@@ -21,7 +21,10 @@
 # the full path of your copy of the ack command.
 #
 
-%w{ui web_preview escape}.each { |lib| require "%s/lib/%s" % [ENV['TM_SUPPORT_PATH'], lib] }
+%w{ui web_preview escape textmate tm/process}.each { |lib| require "%s/lib/%s" % [ENV['TM_SUPPORT_PATH'], lib] }
+
+ack_cmd=ENV['TM_ACK_COMMAND_PATH'] || 'ack'
+TextMate.require_cmd(ack_cmd)
 
 NAME = "Search in Project with ack"
 HEAD  = &lt;&lt;-HTML
@@ -124,30 +127,36 @@ puts &lt;&lt;-HTML
   &lt;h2&gt;Searching for “#{ escape(query) }”&lt;/h2&gt;
 HTML
 
-ack_cmd=ENV['TM_ACK_COMMAND_PATH'] || 'ack'
-selected_files=ENV['TM_SELECTED_FILES']
+selected_files=TextMate.selected_files
 
 if selected_files
-	command = %{#{ack_cmd} -H #{e_sh query} #{selected_files}}
+	command = [ack_cmd, "-H", query, selected_files]
 	puts &lt;&lt;-HTML
-	  &lt;p&gt;&lt;small&gt;Search limited to  “#{ escape(selected_files) }”&lt;/small&gt;&lt;/p&gt;
+	  &lt;p&gt;&lt;small&gt;Search limited to  “#{selected_files.join(' ')}”&lt;/small&gt;&lt;/p&gt;
 HTML
 else
-	command = %{cd "#{directory}"; #{ack_cmd} #{e_sh query}}
+	Dir.chdir(directory)
+	command = [ack_cmd, query]
 end
 
 puts &lt;&lt;-HTML
   &lt;table&gt;
 HTML
 
-IO.popen(command) do |pipe|
+# Used to highlight matches
+query_re = Regexp.new( Regexp.escape(CGI.escapeHTML(query)), Regexp::IGNORECASE)
 
-  # Used to highlight matches
-  query_re = Regexp.new( Regexp.escape(CGI.escapeHTML(query)), Regexp::IGNORECASE)
-  
-  last_path = path = i = nil
-  pipe.each_with_index do |line, i|
+last_path = path = i = nil
+err = ""
+alternate = true
+lines = 0
 
+TextMate::Process.run(command, :interactive_input =&gt; false) do |line, type|
+  case type
+  when :err
+    err &lt;&lt; line
+  when :out
+    lines = lines + 1
     line.gsub!(/^([^:]+):(\d+):(.*)$/) do
 
       relative_path, line_number, content = $1, $2, $3.strip
@@ -168,7 +177,7 @@ IO.popen(command) do |pipe|
                   end
       &lt;&lt;-HTML
 
-        &lt;tr class="#{ 'odd' unless i%2==0 } #{ 'newFile' if (path != last_path) }"&gt;
+        &lt;tr class="#{ 'odd' unless (alternate = (not alternate)) } #{ 'newFile' if (path != last_path) }"&gt;
           &lt;td&gt;
             &lt;a href="#{ url }" title="#{ "%s:%s" % [path, line_number] }"&gt;
               #{ fname }
@@ -181,23 +190,25 @@ IO.popen(command) do |pipe|
     end
     puts line
     last_path = path
-
   end
+end
 
-  if i
-    # A paragraph inside the table ends up at the top even though it's output
-    # at the end. Something of a hack :)
-    i += 1
-    puts &lt;&lt;-HTML
-      &lt;p&gt;#{i} matching line#{i==1 ? '' : 's'}:&lt;/p&gt;
-      #{RESIZE_TABLE}
-    HTML
-  else
-    puts &lt;&lt;-HTML
-      &lt;tr id="empty"&gt;&lt;td colspan="2"&gt;No results.&lt;/td&gt;&lt;/tr&gt;
-    HTML
-  end
-    
+if lines
+  # A paragraph inside the table ends up at the top even though it's output
+  # at the end. Something of a hack :)
+  puts &lt;&lt;-HTML
+    &lt;p&gt;#{lines} matching line#{lines==1 ? '' : 's'}:&lt;/p&gt;
+    #{RESIZE_TABLE}
+  HTML
+else
+  puts &lt;&lt;-HTML
+    &lt;tr id="empty"&gt;&lt;td colspan="2"&gt;No results.&lt;/td&gt;&lt;/tr&gt;
+  HTML
+end
+
+if $? != 0
+  TextMate::UI.alert(:critical, "Search In Project With Ack Error", err)
+  TextMate.exit_discard
 end
 
 # TODO: see how to detect command not found in ruby and suggest using
@@ -208,6 +219,8 @@ puts &lt;&lt;-HTML
 HTML
 
 html_footer
+
+TextMate.exit_show_html
 </string>
 	<key>input</key>
 	<string>none</string>
