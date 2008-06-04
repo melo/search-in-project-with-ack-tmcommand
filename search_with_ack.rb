@@ -152,7 +152,7 @@ TextMate::Process.run(command, :interactive_input => false) do |line, type|
 
       relative_path, line_number, content = $1, $2, $3.strip
 	
-      relative_path.sub!(directory + "/", '') if ENV['TM_SELECTED_FILES']
+      relative_path.sub!(directory + "/", '') if selected_files
 
       path = directory + '/' + relative_path
       url = "txmt://open/?url=file://#{path}&line=#{line_number}"
