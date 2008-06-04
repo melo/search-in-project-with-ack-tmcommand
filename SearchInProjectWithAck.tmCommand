@@ -21,14 +21,14 @@
 # the full path of your copy of the ack command.
 #
 
-%w{ui web_preview escape textmate tm/process}.each { |lib| require "%s/lib/%s" % [ENV['TM_SUPPORT_PATH'], lib] }
+%w{ui web_preview escape textmate tm/process}.each { |lib| require &quot;%s/lib/%s&quot; % [ENV[&apos;TM_SUPPORT_PATH&apos;], lib] }
 
-ack_cmd=ENV['TM_ACK_COMMAND_PATH'] || 'ack'
+ack_cmd=ENV[&apos;TM_ACK_COMMAND_PATH&apos;] || ENV[&apos;TM_ACK&apos;] || &apos;ack&apos;
 TextMate.require_cmd(ack_cmd)
 
-NAME = "Search in Project with ack"
+NAME = &quot;Search in Project with ack&quot;
 HEAD  = &lt;&lt;-HTML
-  &lt;style type="text/css"&gt;
+  &lt;style type=&quot;text/css&quot;&gt;
     table { font-size:0.9em; border-collapse:collapse; border-bottom:1px solid #555; }
     h2 { font-size:1.3em; }
     td { vertical-align:top; white-space:nowrap; padding:0.4em 1em; }
@@ -41,13 +41,13 @@ HEAD  = &lt;&lt;-HTML
     .keyword { font-weight:bold; margin:0 0.1em; }
     .ellipsis { color:#777; margin:0 0.5em; }
   &lt;/style&gt;
-  &lt;script type="text/javascript"&gt;
+  &lt;script type=&quot;text/javascript&quot;&gt;
     function reveal_file(path) {
-      const quote = '"';
-      const command = "osascript -e ' tell app "+quote+"Finder"+quote+"' " +
-                        " -e 'reveal (POSIX file " +quote+path+quote + ")' " +
-                        " -e 'activate' " + 
-                      " -e 'end' ";
+      const quote = &apos;&quot;&apos;;
+      const command = &quot;osascript -e &apos; tell app &quot;+quote+&quot;Finder&quot;+quote+&quot;&apos; &quot; +
+                        &quot; -e &apos;reveal (POSIX file &quot; +quote+path+quote + &quot;)&apos; &quot; +
+                        &quot; -e &apos;activate&apos; &quot; + 
+                      &quot; -e &apos;end&apos; &quot;;
       TextMate.system(command, null);
     }
 
@@ -65,7 +65,7 @@ HEAD  = &lt;&lt;-HTML
   }
   
   function resizeTableToFit() {
-    var table = document.getElementsByTagName("table")[0];
+    var table = document.getElementsByTagName(&quot;table&quot;)[0];
     const minWidth = 450, minHeight = 250;
 
     var pos = findPos(table);
@@ -86,13 +86,13 @@ HEAD  = &lt;&lt;-HTML
 HTML
 
 RESIZE_TABLE = &lt;&lt;-HTML
-  &lt;script type="text/javascript"&gt;
+  &lt;script type=&quot;text/javascript&quot;&gt;
     resizeTableToFit();
   &lt;/script&gt;
 HTML
 
 def ellipsize_path(path)
-  path.sub(/^(.{30})(.{10,})(.{30})$/) { "#$1⋯#$3" }
+  path.sub(/^(.{30})(.{10,})(.{30})$/) { &quot;#$1?#$3&quot; }
 end
 
 def escape(string)
@@ -107,32 +107,32 @@ def bail(message)
   exit
 end
 
-directory = ENV['TM_PROJECT_DIRECTORY'] || 
-            ( ENV['TM_FILEPATH'] &amp;&amp; File.dirname(ENV['TM_FILEPATH']) )
+directory = ENV[&apos;TM_PROJECT_DIRECTORY&apos;] || 
+            ( ENV[&apos;TM_FILEPATH&apos;] &amp;&amp; File.dirname(ENV[&apos;TM_FILEPATH&apos;]) )
 
 puts html_head(
   :window_title =&gt; NAME,
   :page_title   =&gt; NAME,
-  :sub_title    =&gt; directory || "Error",
+  :sub_title    =&gt; directory || &quot;Error&quot;,
   :html_head    =&gt; HEAD
 )
 
-bail("Not in a saved file") unless directory
+bail(&quot;Not in a saved file&quot;) unless directory
 
-query = TextMate::UI.request_string(:title =&gt; "Search in Project with ack", :prompt =&gt; "Find this:", :default =&gt; %x{pbpaste -pboard find})
-bail("Search aborted") unless query
-IO.popen('pbcopy -pboard find', 'w') { |copy| copy.print query }
+query = TextMate::UI.request_string(:title =&gt; &quot;Search in Project with ack&quot;, :prompt =&gt; &quot;Find this:&quot;, :default =&gt; %x{pbpaste -pboard find})
+bail(&quot;Search aborted&quot;) unless query
+IO.popen(&apos;pbcopy -pboard find&apos;, &apos;w&apos;) { |copy| copy.print query }
 
 puts &lt;&lt;-HTML
-  &lt;h2&gt;Searching for “#{ escape(query) }”&lt;/h2&gt;
+  &lt;h2&gt;Searching for #{ escape(query) }&lt;/h2&gt;
 HTML
 
 selected_files=TextMate.selected_files
 
 if selected_files
-	command = [ack_cmd, "-H", query, selected_files]
+	command = [ack_cmd, &quot;-H&quot;, query, selected_files]
 	puts &lt;&lt;-HTML
-	  &lt;p&gt;&lt;small&gt;Search limited to  “#{selected_files.join(' ')}”&lt;/small&gt;&lt;/p&gt;
+	  &lt;p&gt;&lt;small&gt;Search limited to  #{ escape(selected_files.join(&apos; &apos;)) }&lt;/small&gt;&lt;/p&gt;
 HTML
 else
 	Dir.chdir(directory)
@@ -147,7 +147,7 @@ HTML
 query_re = Regexp.new( Regexp.escape(CGI.escapeHTML(query)), Regexp::IGNORECASE)
 
 last_path = path = i = nil
-err = ""
+err = &quot;&quot;
 alternate = true
 lines = 0
 
@@ -161,25 +161,25 @@ TextMate::Process.run(command, :interactive_input =&gt; false) do |line, type|
 
       relative_path, line_number, content = $1, $2, $3.strip
 	
-      relative_path.sub!(directory + "/", '') if ENV['TM_SELECTED_FILES']
+      relative_path.sub!(directory + &quot;/&quot;, &apos;&apos;) if selected_files
 
-      path = directory + '/' + relative_path
-      url = "txmt://open/?url=file://#{path}&amp;line=#{line_number}"
-      fname = "%s:%s" % [ellipsize_path(relative_path), line_number];
-      fname = ":%s" % [ line_number ] if (path == last_path);
+      path = directory + &apos;/&apos; + relative_path
+      url = &quot;txmt://open/?url=file://#{path}&amp;line=#{line_number}&quot;
+      fname = &quot;%s:%s&quot; % [ellipsize_path(relative_path), line_number];
+      fname = &quot;:%s&quot; % [ line_number ] if (path == last_path);
       
       content = escape(content).
                   # Highlight keywords
-                  gsub(query_re) { %{&lt;a href="#{url}"&gt;&lt;strong class="keyword"&gt;#$&amp;&lt;/strong&gt;&lt;/a&gt;} }.
+                  gsub(query_re) { %{&lt;a href=&quot;#{url}&quot;&gt;&lt;strong class=&quot;keyword&quot;&gt;#$&amp;&lt;/strong&gt;&lt;/a&gt;} }.
                   # Ellipsize before, between and after keywords
                   gsub(%r{(^[^&lt;]{25}|&lt;/strong&gt;[^&lt;]{15})([^&lt;]{20,})([^&lt;]{15}&lt;strong|[^&lt;]{25}$)}) do
-                    %{#$1&lt;span class="ellipsis" title="#{escape($2)}"&gt;⋯&lt;/span&gt;#$3}
+                    %{#$1&lt;span class=&quot;ellipsis&quot; title=&quot;#{escape($2)}&quot;&gt;?&lt;/span&gt;#$3}
                   end
       &lt;&lt;-HTML
 
-        &lt;tr class="#{ 'odd' unless (alternate = (not alternate)) } #{ 'newFile' if (path != last_path) }"&gt;
+        &lt;tr class=&quot;#{ &apos;odd&apos; unless (alternate = (not alternate)) } #{ &apos;newFile&apos; if (path != last_path) }&quot;&gt;
           &lt;td&gt;
-            &lt;a href="#{ url }" title="#{ "%s:%s" % [path, line_number] }"&gt;
+            &lt;a href=&quot;#{ url }&quot; title=&quot;#{ &quot;%s:%s&quot; % [path, line_number] }&quot;&gt;
               #{ fname }
             &lt;/a&gt;
           &lt;/td&gt;
@@ -194,20 +194,20 @@ TextMate::Process.run(command, :interactive_input =&gt; false) do |line, type|
 end
 
 if lines
-  # A paragraph inside the table ends up at the top even though it's output
+  # A paragraph inside the table ends up at the top even though it&apos;s output
   # at the end. Something of a hack :)
   puts &lt;&lt;-HTML
-    &lt;p&gt;#{lines} matching line#{lines==1 ? '' : 's'}:&lt;/p&gt;
+    &lt;p&gt;#{lines} matching line#{lines==1 ? &apos;&apos; : &apos;s&apos;}:&lt;/p&gt;
     #{RESIZE_TABLE}
   HTML
 else
   puts &lt;&lt;-HTML
-    &lt;tr id="empty"&gt;&lt;td colspan="2"&gt;No results.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr id=&quot;empty&quot;&gt;&lt;td colspan=&quot;2&quot;&gt;No results.&lt;/td&gt;&lt;/tr&gt;
   HTML
 end
 
 if $? != 0
-  TextMate::UI.alert(:critical, "Search In Project With Ack Error", err)
+  TextMate::UI.alert(:critical, &quot;Search In Project With Ack Error&quot;, err)
   TextMate.exit_discard
 end
 
