@@ -115,7 +115,7 @@ bail("Search aborted") unless query
 IO.popen('pbcopy -pboard find', 'w') { |copy| copy.print query }
 
 puts <<-HTML
-  <h2>Searching for Ò#{ escape(query) }Ó</h2>
+  <h2>Searching for #{ escape(query) }</h2>
 HTML
 
 selected_files=TextMate.selected_files
@@ -123,7 +123,7 @@ selected_files=TextMate.selected_files
 if selected_files
 	command = [ack_cmd, "-H", query, selected_files]
 	puts <<-HTML
-	  <p><small>Search limited to  Ò#{selected_files.join(' ')}Ó</small></p>
+	  <p><small>Search limited to  #{selected_files.join(' ')}</small></p>
 HTML
 else
 	Dir.chdir(directory)
