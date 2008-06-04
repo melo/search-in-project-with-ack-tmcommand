@@ -14,7 +14,7 @@
 
 %w{ui web_preview escape textmate tm/process}.each { |lib| require "%s/lib/%s" % [ENV['TM_SUPPORT_PATH'], lib] }
 
-ack_cmd=ENV['TM_ACK_COMMAND_PATH'] || 'ack'
+ack_cmd=ENV['TM_ACK_COMMAND_PATH'] || ENV['TM_ACK'] || 'ack'
 TextMate.require_cmd(ack_cmd)
 
 NAME = "Search in Project with ack"
@@ -115,7 +115,7 @@ bail("Search aborted") unless query
 IO.popen('pbcopy -pboard find', 'w') { |copy| copy.print query }
 
 puts <<-HTML
-  <h2>Searching for Ò#{ escape(query) }Ó</h2>
+  <h2>Searching for Ã’#{ escape(query) }Ã“</h2>
 HTML
 
 selected_files=TextMate.selected_files
@@ -123,7 +123,7 @@ selected_files=TextMate.selected_files
 if selected_files
 	command = [ack_cmd, "-H", query, selected_files]
 	puts <<-HTML
-	  <p><small>Search limited to  Ò#{selected_files.join(' ')}Ó</small></p>
+	  <p><small>Search limited to  Ã’#{selected_files.join(' ')}Ã“</small></p>
 HTML
 else
 	Dir.chdir(directory)
