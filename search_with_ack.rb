@@ -123,7 +123,7 @@ selected_files=TextMate.selected_files
 if selected_files
 	command = [ack_cmd, "-H", '--', query, selected_files]
 	puts <<-HTML
-	  <p><small>Search limited to  #{ escape(selected_files.join(' ')) }</small></p>
+	  <p><small>Search limited to #{ escape(selected_files.join(' ')) }</small></p>
 HTML
 else
 	Dir.chdir(directory)
