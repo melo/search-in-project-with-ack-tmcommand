@@ -130,13 +130,13 @@ HTML
 selected_files=TextMate.selected_files
 
 if selected_files
-	command = [ack_cmd, &quot;-H&quot;, query, selected_files]
+	command = [ack_cmd, &quot;-H&quot;, &apos;--&apos;, query, selected_files]
 	puts &lt;&lt;-HTML
 	  &lt;p&gt;&lt;small&gt;Search limited to  #{ escape(selected_files.join(&apos; &apos;)) }&lt;/small&gt;&lt;/p&gt;
 HTML
 else
 	Dir.chdir(directory)
-	command = [ack_cmd, query]
+	command = [ack_cmd, &apos;--&apos;, query]
 end
 
 puts &lt;&lt;-HTML
