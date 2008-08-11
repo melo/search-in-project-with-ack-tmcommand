@@ -15,6 +15,11 @@
 # Updated to use with ack by Pedro Melo &lt;melo@simplicidade.org&gt; 2008-05-26
 # Support for TM_SELECTED_FILES by Corey Jewett &lt;ml@syntheticplayground.com&gt; 2008-05-30
 #
+# 2008-08-11 (melo): Added flag &apos;:&apos; you must start your query with a : to
+# search only in the &quot;selected files&quot;. I added this because using the
+# selected files ends up not being something that I commonly do.
+#
+#
 # **NOTE WELL**: TextMate does not inherit your PATH, so if you this
 # command does not find it define the environment variable
 # TM_ACK_COMMAND_PATH in your Preferences &gt; Advanced &gt; Shell Variables with
@@ -121,18 +126,28 @@ bail(&quot;Not in a saved file&quot;) unless directory
 
 query = TextMate::UI.request_string(:title =&gt; &quot;Search in Project with ack&quot;, :prompt =&gt; &quot;Find this:&quot;, :default =&gt; %x{pbpaste -pboard find})
 bail(&quot;Search aborted&quot;) unless query
+
+if query[0,1] == &apos;:&apos;
+  query[0,1] = &apos;&apos;
+  use_selected_files = true
+else
+  use_selected_files = false
+end
+
 IO.popen(&apos;pbcopy -pboard find&apos;, &apos;w&apos;) { |copy| copy.print query }
 
 puts &lt;&lt;-HTML
   &lt;h2&gt;Searching for #{ escape(query) }&lt;/h2&gt;
 HTML
 
-selected_files=TextMate.selected_files
+if use_selected_files
+  selected_files=TextMate.selected_files
+end
 
 if selected_files
 	command = [ack_cmd, &quot;-H&quot;, &apos;--&apos;, query, selected_files]
 	puts &lt;&lt;-HTML
-	  &lt;p&gt;&lt;small&gt;Search limited to  #{ escape(selected_files.join(&apos; &apos;)) }&lt;/small&gt;&lt;/p&gt;
+	  &lt;p&gt;&lt;small&gt;Search limited to #{ escape(selected_files.join(&apos; &apos;)) }&lt;/small&gt;&lt;/p&gt;
 HTML
 else
 	Dir.chdir(directory)
