@@ -8,3 +8,6 @@ ${target}: search_with_ack.rb
 
 test: all
 	open ${target}
+
+install: ${target}
+	open ${target}
